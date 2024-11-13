@@ -7,34 +7,32 @@ import pywt
 from skimage.restoration import denoise_bilateral, denoise_wavelet
 from skimage.util import random_noise
 
-noise_types = ["gaussian", "salt_pepper", "speckle"]
+noise_types = ["gaussian", "snp", "speckle"]
 denoising_methods = ["bilateral", "wavelet", "median", "gaussian"]
 
 def add_noise(image, noise_type):
-    """Add different types of noise to the image."""
     if noise_type == "gaussian":
         noisy = random_noise(image, mode='gaussian', mean=0, var=0.01)
-    elif noise_type == "salt_pepper":
+    elif noise_type == "snp":
         noisy = random_noise(image, mode='s&p', amount=0.02)
     elif noise_type == "speckle":
         noisy = random_noise(image, mode='speckle', mean=0, var=0.05)
     return noisy
 
 def apply_denoising(image, method):
-    """Apply different denoising methods."""
     if method == "bilateral":
-        # Properly handle RGB images for bilateral filtering
+        # use axis = -1 for RBG. ow it gives error
         denoised = denoise_bilateral(image, sigma_color=0.1, sigma_spatial=15, channel_axis=-1)
     elif method == "wavelet":
         denoised = denoise_wavelet(image, method='BayesShrink', mode='soft', 
                                  wavelet='db1', channel_axis=-1)
     elif method == "median":
-        # Apply median filter to each channel separately
+        # median to each channel
         denoised = np.zeros_like(image)
         for i in range(image.shape[-1]):
             denoised[..., i] = ndimage.median_filter(image[..., i], size=3)
     elif method == "gaussian":
-        # Apply gaussian filter to each channel separately
+        # gaus to each channel
         denoised = np.zeros_like(image)
         for i in range(image.shape[-1]):
             denoised[..., i] = ndimage.gaussian_filter(image[..., i], sigma=1)
